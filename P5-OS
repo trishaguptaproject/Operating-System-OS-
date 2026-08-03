@@ -1,0 +1,125 @@
+#code:1
+import threading
+# Create a lock for proper printing
+print_lock = threading.Lock()
+# Function to generate Fibonacci sequence
+def generate_fibonacci(n):
+a, b = 0, 1
+sequence = []
+for _ in range(n):
+sequence.append(a)
+a, b = b, a + b
+return sequence
+# Function to run in each thread
+def task(n):
+result = generate_fibonacci(n)
+with print_lock:
+print(f"Fibonacci({n}) = {result}")
+# Main program to create threads
+if __name__ == "__main__":
+print("Multi-threaded Fibonacci Sequence Generator")
+print("Name: Trisha")
+print("Roll no: S086\n")
+# Changed values
+values = [7, 8, 10]
+threads = []
+# Create and start threads
+for n in values:
+t = threading.Thread(target=task, args=(n,))
+threads.append(t)
+t.start()
+# Wait for all threads to complete
+for t in threads:
+t.join()
+print("\nAll threads completed.")
+
+#Write a multi-threaded Python program where each thread calculates the factorial of a
+different number. Display the factorial result from each thread separately.
+ghdhd
+
+import threading
+# Create a lock for synchronized printing
+print_lock = threading.Lock()
+# Function to calculate factorial
+def factorial(n):
+result = 1
+for i in range(1, n + 1):
+result *= i
+return result
+# Function to run in each thread
+def calculate_factorial(n):
+result = factorial(n)
+# Lock prevents output from mixing
+with print_lock:
+print(f"Factorial of {n} = {result}")
+# Main program
+if __name__ == "__main__":
+print("Multi-threaded Factorial Calculator")
+print("Name: Trisha")
+print("Roll no: S086\n")
+# Different numbers for each thread
+numbers = [5, 7, 10, 12]
+threads = []
+# Creating and starting threads
+for num in numbers:
+t = threading.Thread(target=calculate_factorial, args=(num,))
+threads.append(t)
+t.start()
+# Waiting for all threads to finish
+for t in threads:
+t.join()
+print("\nAll threads completed.")
+
+#2. Write a program to print even-odd numbers and reverse a string using the concept of
+Multithreading.
+import threading
+
+# Lock for proper printing
+print_lock = threading.Lock()
+# Function to print even numbers
+def print_even(numbers):
+with print_lock:
+print("Even Numbers:")
+for num in numbers:
+if num % 2 == 0:
+print(num, end=" ")
+print()
+# Function to print odd numbers
+def print_odd(numbers):
+with print_lock:
+print("Odd Numbers:")
+
+for num in numbers:
+if num % 2 != 0:
+print(num, end=" ")
+print()
+# Function to reverse a string
+def reverse_string(text):
+reversed_text = text[::-1]
+with print_lock:
+print("Original String:", text)
+print("Reversed String:", reversed_text)
+# Main program
+if __name__ == "__main__":
+print("Multi-threaded Even-Odd and String Reverse Program")
+print("Name: Trisha")
+print("Roll no: S086\n")
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+text = "Multithreading"
+# Creating threads
+t1 = threading.Thread(target=print_even, args=(numbers,))
+t2 = threading.Thread(target=print_odd, args=(numbers,))
+t3 = threading.Thread(target=reverse_string, args=(text,))
+# Starting threads
+t1.start()
+t2.start()
+t3.start()
+# Waiting for threads to complete
+t1.join()
+t2.join()
+t3.join()
+print("\nAll threads completed.")
+
+
+
+
