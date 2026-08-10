@@ -1,0 +1,441 @@
+#4. Consider the following table of arrival time and burst time for three processes P1, P2and P3 and given Time Quantum = 2 ms. Calculate average turn around time andaverage waiting time. For the same set of processes, schedule them using FCFS.
+
+#Process Arrival Time Burst Time
+#P1 0 ms 5 ms
+#P2 4 ms 2 ms
+#P3 5 ms 4 ms
+# CPU Scheduling: Round Robin and FCFS
+# Name: Trisha
+# Roll No: S086
+
+print("=" * 55)
+print("        CPU SCHEDULING ALGORITHM")
+print("        Name    : Trisha")
+print("        Roll No : S086")
+print("=" * 55)
+
+# Process data
+processes = [
+    ["P1", 0, 5],
+    ["P2", 4, 2],
+    ["P3", 5, 4]
+]
+
+TIME_QUANTUM = 2
+
+# ROUND ROBIN SCHEDULING
+
+def round_robin(processes, quantum):
+    n = len(processes)
+
+    remaining = [p[2] for p in processes]
+    completion = [0] * n
+    turnaround = [0] * n
+    waiting = [0] * n
+
+    ready_queue = []
+    visited = [False] * n
+
+    time = 0
+    completed = 0
+
+    gantt = []
+
+    # Start at earliest arrival time
+    time = min(p[1] for p in processes)
+
+    # Add processes that have already arrived
+    for i in range(n):
+        if processes[i][1] <= time and not visited[i]:
+            ready_queue.append(i)
+            visited[i] = True
+
+    while completed < n:
+
+        # If queue is empty, move time to next arrival
+        if not ready_queue:
+            next_arrival = min(
+                processes[i][1]
+                for i in range(n)
+                if remaining[i] > 0
+            )
+
+            time = max(time, next_arrival)
+
+            for i in range(n):
+                if processes[i][1] <= time and not visited[i]:
+                    ready_queue.append(i)
+                    visited[i] = True
+
+            continue
+
+        current = ready_queue.pop(0)
+
+        start_time = time
+
+        execution_time = min(quantum, remaining[current])
+
+        time += execution_time
+        remaining[current] -= execution_time
+
+        gantt.append(
+            (processes[current][0], start_time, time)
+        )
+
+        # Add newly arrived processes
+        for i in range(n):
+            if (processes[i][1] <= time
+                    and not visited[i]
+                    and remaining[i] > 0):
+                ready_queue.append(i)
+                visited[i] = True
+
+        # If process is not completed, put it back
+        if remaining[current] > 0:
+            ready_queue.append(current)
+        else:
+            completion[current] = time
+            completed += 1
+
+    # Calculate TAT and WT
+    for i in range(n):
+        turnaround[i] = completion[i] - processes[i][1]
+        waiting[i] = turnaround[i] - processes[i][2]
+
+    return completion, turnaround, waiting, gantt
+
+# FCFS SCHEDULING
+def fcfs(processes):
+    # Sort processes according to arrival time
+    sorted_processes = sorted(processes, key=lambda x: x[1])
+
+    completion = {}
+    turnaround = {}
+    waiting = {}
+
+    gantt = []
+    time = 0
+
+    for name, arrival, burst in sorted_processes:
+
+        # CPU remains idle if process has not arrived
+        if time < arrival:
+            time = arrival
+
+        start_time = time
+        time += burst
+
+        completion[name] = time
+        turnaround[name] = completion[name] - arrival
+        waiting[name] = turnaround[name] - burst
+
+        gantt.append((name, start_time, time))
+
+    return completion, turnaround, waiting, gantt
+
+# PRINT GANTT CHART
+def print_gantt(gantt):
+    print("\nGantt Chart:")
+    print("-" * 60)
+
+    # Process boxes
+    print("|", end="")
+    for process, start, end in gantt:
+        print(f"  {process:^6} |", end="")
+    print()
+
+    print("-" * 60)
+
+    # Time values
+    print(gantt[0][1], end="")
+    for process, start, end in gantt:
+        print(f"{end:>10}", end="")
+    print()
+
+# ROUND ROBIN
+
+completion, turnaround, waiting, gantt = round_robin(
+    processes, TIME_QUANTUM
+)
+
+print("\n\nROUND ROBIN SCHEDULING")
+print("Time Quantum =", TIME_QUANTUM, "ms")
+
+print_gantt(gantt)
+
+print("\nProcess\tAT\tBT\tCT\tTAT\tWT")
+
+total_tat = 0
+total_wt = 0
+
+for i, p in enumerate(processes):
+    print(
+        f"{p[0]}\t{p[1]}\t{p[2]}\t"
+        f"{completion[i]}\t{turnaround[i]}\t{waiting[i]}"
+    )
+
+    total_tat += turnaround[i]
+    total_wt += waiting[i]
+
+avg_tat = total_tat / len(processes)
+avg_wt = total_wt / len(processes)
+
+print("\nAverage Turnaround Time =", round(avg_tat, 2), "ms")
+print("Average Waiting Time    =", round(avg_wt, 2), "ms")
+
+# FCFS
+
+completion_fcfs, turnaround_fcfs, waiting_fcfs, gantt_fcfs = fcfs(
+    processes
+)
+
+print("\n\nFCFS SCHEDULING")
+
+print_gantt(gantt_fcfs)
+
+print("\nProcess\tAT\tBT\tCT\tTAT\tWT")
+
+total_tat = 0
+total_wt = 0
+
+for p in processes:
+    name = p[0]
+
+    print(
+        f"{name}\t{p[1]}\t{p[2]}\t"
+        f"{completion_fcfs[name]}\t"
+        f"{turnaround_fcfs[name]}\t"
+        f"{waiting_fcfs[name]}"
+    )
+
+    total_tat += turnaround_fcfs[name]
+    total_wt += waiting_fcfs[name]
+
+avg_tat = total_tat / len(processes)
+avg_wt = total_wt / len(processes)
+
+print("\nAverage Turnaround Time =", round(avg_tat, 2), "ms")
+print("Average Waiting Time    =", round(avg_wt, 2), "ms")
+
+
+print("\n" + "=" * 55)
+print("Name    : Trisha")
+print("Roll No : S086")
+print("=" * 55)
+
+
+#5. Consider the following table of arrival time and burst time for three processes P1, P2and P3 and given Time Quantum = 2 ms. Calculate average turn around time and average waiting time.
+
+#Process Arrival Time Burst Time
+#P1 0 ms 5 ms
+#P2 1 ms 3 ms
+#P3 2 ms 6 ms
+# CPU Scheduling - Round Robin
+# Name: Trisha
+# Roll No: S086
+
+print("=" * 55)
+print("        CPU SCHEDULING - ROUND ROBIN")
+print("        Name    : Trisha")
+print("        Roll No : S086")
+print("=" * 55)
+
+# Process details
+processes = [
+    ["P1", 0, 5],
+    ["P2", 1, 3],
+    ["P3", 2, 6]
+]
+
+TIME_QUANTUM = 2
+
+# ROUND ROBIN SCHEDULING
+def round_robin(processes, quantum):
+
+    n = len(processes)
+
+    # Remaining burst time
+    remaining = [p[2] for p in processes]
+
+    # Completion time
+    completion = [0] * n
+
+    # Turnaround time
+    turnaround = [0] * n
+
+    # Waiting time
+    waiting = [0] * n
+
+    ready_queue = []
+    visited = [False] * n
+
+    time = 0
+    completed = 0
+
+    # Gantt chart
+    gantt = []
+
+    # Start from first arrival time
+    time = min(p[1] for p in processes)
+
+    # Add initially arrived processes
+    for i in range(n):
+        if processes[i][1] <= time:
+            ready_queue.append(i)
+            visited[i] = True
+
+    # Execute until all processes are completed
+    while completed < n:
+
+        # If ready queue is empty
+        if not ready_queue:
+
+            next_arrival = min(
+                processes[i][1]
+                for i in range(n)
+                if remaining[i] > 0
+            )
+
+            time = next_arrival
+
+            for i in range(n):
+                if (processes[i][1] <= time
+                        and not visited[i]
+                        and remaining[i] > 0):
+
+                    ready_queue.append(i)
+                    visited[i] = True
+
+            continue
+
+        # Select first process
+        current = ready_queue.pop(0)
+
+        start_time = time
+
+        # Execute for maximum quantum
+        execution_time = min(
+            quantum,
+            remaining[current]
+        )
+
+        time = time + execution_time
+
+        remaining[current] = (
+            remaining[current] - execution_time
+        )
+
+        # Store Gantt chart information
+        gantt.append(
+            (processes[current][0], start_time, time)
+        )
+
+        # Add newly arrived processes
+        for i in range(n):
+
+            if (processes[i][1] <= time
+                    and not visited[i]
+                    and remaining[i] > 0):
+
+                ready_queue.append(i)
+                visited[i] = True
+
+        # If process is not completed,
+        # add it again to the queue
+        if remaining[current] > 0:
+
+            ready_queue.append(current)
+
+        else:
+
+            completion[current] = time
+            completed = completed + 1
+
+    # Calculate TAT and WT
+    for i in range(n):
+
+        turnaround[i] = (
+            completion[i] - processes[i][1]
+        )
+
+        waiting[i] = (
+            turnaround[i] - processes[i][2]
+        )
+
+    return completion, turnaround, waiting, gantt
+
+# PRINT GANTT CHART
+def print_gantt(gantt):
+
+    print("\nGantt Chart:")
+    print("-" * 70)
+
+    print("|", end="")
+
+    for process, start, end in gantt:
+        print(f"  {process:^5} |", end="")
+
+    print()
+
+    print("-" * 70)
+
+    print(gantt[0][1], end="")
+
+    for process, start, end in gantt:
+        print(f"{end:>9}", end="")
+
+    print()
+
+# MAIN PROGRAM
+completion, turnaround, waiting, gantt = round_robin(
+    processes,
+    TIME_QUANTUM
+)
+
+print("\nTime Quantum =", TIME_QUANTUM, "ms")
+
+# Display Gantt Chart
+print_gantt(gantt)
+
+# Display table
+print("\nProcess\tAT\tBT\tCT\tTAT\tWT")
+
+total_tat = 0
+total_wt = 0
+
+for i in range(len(processes)):
+
+    print(
+        processes[i][0],
+        "\t",
+        processes[i][1],
+        "\t",
+        processes[i][2],
+        "\t",
+        completion[i],
+        "\t",
+        turnaround[i],
+        "\t",
+        waiting[i]
+    )
+
+    total_tat = total_tat + turnaround[i]
+    total_wt = total_wt + waiting[i]
+
+
+# Calculate averages
+average_tat = total_tat / len(processes)
+average_wt = total_wt / len(processes)
+
+print("\nAverage Turnaround Time =",
+      round(average_tat, 2), "ms")
+
+print("Average Waiting Time    =",
+      round(average_wt, 2), "ms")
+
+# STUDENT DETAILS
+
+print("\n" + "=" * 55)
+print("Name    : Trisha")
+print("Roll No : S086")
+print("=" * 55)
