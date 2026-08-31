@@ -1,0 +1,105 @@
+#Aim:Memory Management Techniques -Simulate FIFO and LRU page replacement using page reference strings. 
+#-Measure hit/miss ratios under different reference patterns. 
+#-Extend to include frames and memory constraints.
+
+
+print("Trisha Gupta-S086")
+# Memory Management Techniques
+# FIFO and LRU Page Replacement
+# Subject: Python for DS
+
+def fifo_page_replacement(pages, frames):
+    memory = []
+    page_faults = 0
+    page_hits = 0
+    pointer = 0
+
+    print("\n--- FIFO Page Replacement ---")
+    print("Page\tMemory\t\tResult")
+
+    for page in pages:
+        if page in memory:
+            page_hits += 1
+            result = "Hit"
+        else:
+            page_faults += 1
+            result = "Miss"
+
+            if len(memory) < frames:
+                memory.append(page)
+            else:
+                memory[pointer] = page
+                pointer = (pointer + 1) % frames
+
+        print(page, "\t", memory, "\t", result)
+
+    total = len(pages)
+    hit_ratio = page_hits / total
+    miss_ratio = page_faults / total
+
+    print("\nFIFO Results")
+    print("Page Hits   :", page_hits)
+    print("Page Misses :", page_faults)
+    print("Hit Ratio   :", round(hit_ratio, 2))
+    print("Miss Ratio  :", round(miss_ratio, 2))
+
+
+def lru_page_replacement(pages, frames):
+    memory = []
+    page_faults = 0
+    page_hits = 0
+
+    print("\n--- LRU Page Replacement ---")
+    print("Page\tMemory\t\tResult")
+
+    for page in pages:
+        if page in memory:
+            page_hits += 1
+            result = "Hit"
+
+            # Move recently used page to the end
+            memory.remove(page)
+            memory.append(page)
+
+        else:
+            page_faults += 1
+            result = "Miss"
+
+            if len(memory) < frames:
+                memory.append(page)
+            else:
+                # Remove least recently used page
+                memory.pop(0)
+                memory.append(page)
+
+        print(page, "\t", memory, "\t", result)
+
+    total = len(pages)
+    hit_ratio = page_hits / total
+    miss_ratio = page_faults / total
+
+    print("\nLRU Results")
+    print("Page Hits   :", page_hits)
+    print("Page Misses :", page_faults)
+    print("Hit Ratio   :", round(hit_ratio, 2))
+    print("Miss Ratio  :", round(miss_ratio, 2))
+
+
+# Main Program
+print("======================================")
+print("   MEMORY MANAGEMENT TECHNIQUES")
+print("======================================")
+
+reference_string = input(
+    "\nEnter page reference string (space separated): "
+)
+
+pages = list(map(int, reference_string.split()))
+
+frames = int(input("Enter number of frames: "))
+
+if frames <= 0:
+    print("Number of frames must be greater than 0.")
+else:
+    fifo_page_replacement(pages, frames)
+    lru_page_replacement(pages, frames)
