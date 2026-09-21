@@ -1,0 +1,232 @@
+#Aim: Disk Scheduling and Simple File System Design 
+import random
+
+# DISK SCHEDULING
+
+def fcfs(requests, head):
+    order = requests.copy()
+    movement = 0
+    current = head
+    for request in order:
+        movement += abs(request - current)
+        current = request
+    return order, movement
+
+def sstf(requests, head):
+    requests = requests.copy()
+    order = []
+    movement = 0
+    current = head
+    while requests:
+        nearest = min(requests, key=lambda x: abs(x - current))
+        movement += abs(nearest - current)
+        current = nearest
+        order.append(nearest)
+        requests.remove(nearest)
+    return order, movement
+
+def cscan(requests, head, disk_size=200):
+    requests = sorted(requests)
+    left = [r for r in requests if r < head]
+    right = [r for r in requests if r >= head]
+    order = []
+    movement = 0
+    current = head
+    for request in right:
+        movement += abs(request - current)
+        current = request
+        order.append(request)
+    if left:
+        movement += (disk_size - 1) - current
+        current = disk_size - 1
+        # Jump back to start (wrap)
+        current = 0
+        for request in left:
+            movement += abs(request - current)
+            current = request
+            order.append(request)
+    return order, movement
+
+def clook(requests, head):
+    requests = sorted(requests)
+    left = [r for r in requests if r < head]
+    right = [r for r in requests if r >= head]
+    order = []
+    movement = 0
+    current = head
+    for request in right:
+        movement += abs(request - current)
+        current = request
+        order.append(request)
+    if left:
+        current = left[0]  # jump directly
+        order.append(current)
+        for request in left[1:]:
+            movement += abs(request - current)
+            current = request
+            order.append(request)
+    return order, movement
+
+def rss(requests, head):
+    order = requests.copy()
+    random.shuffle(order)
+    movement = 0
+    current = head
+    for request in order:
+        movement += abs(request - current)
+        current = request
+    return order, movement
+
+def disk_scheduling():
+    print("\n========== DISK SCHEDULING ==========")
+    try:
+        requests = list(map(int, input("Enter disk request queue (space separated): ").split()))
+        head = int(input("Enter initial head position: "))
+        disk_size = int(input("Enter disk size (e.g. 200): "))
+    except ValueError:
+        print("Invalid input. Please enter integers only.")
+        return
+    algorithms = {
+        "FCFS": fcfs,
+        "SSTF": sstf,
+        "C-SCAN": lambda r, h: cscan(r, h, disk_size),
+        "C-LOOK": clook,
+        "RSS": rss
+    }
+    print("\n---------- RESULTS ----------")
+    for name, algorithm in algorithms.items():
+        order, movement = algorithm(requests, head)
+        print(f"\n{name}")
+        print("Service Order :", order)
+        print("Total Head Movement :", movement)
+
+# SIMPLE FILE SYSTEM
+
+class FileSystem:
+    def __init__(self, total_blocks=20):
+        self.total_blocks = total_blocks
+        self.blocks = [False] * total_blocks
+        self.directory = {}
+        self.block_data = [""] * total_blocks
+
+    def create_file(self, filename, data):
+        if filename in self.directory:
+            print("Error: File already exists.")
+            return
+        if not data:
+            print("Error: File cannot be empty.")
+            return
+        required_blocks = len(data)
+        free_blocks = [i for i in range(self.total_blocks) if not self.blocks[i]]
+        if len(free_blocks) < required_blocks:
+            print("Error: Not enough free disk blocks.")
+            return
+        allocated = free_blocks[:required_blocks]
+        for block in allocated:
+            self.blocks[block] = True
+        for i, block in enumerate(allocated):
+            self.block_data[block] = data[i]
+        self.directory[filename] = {"size": len(data), "blocks": allocated}
+        print(f"File '{filename}' created successfully.")
+        print("Allocated blocks:", allocated)
+
+    def read_file(self, filename):
+        if filename not in self.directory:
+            print("Error: File not found.")
+            return
+        file_info = self.directory[filename]
+        data = "".join(self.block_data[block] for block in file_info["blocks"])
+        print(f"\nFile: {filename}")
+        print("Size:", file_info["size"])
+        print("Blocks:", file_info["blocks"])
+        print("Content:", data)
+
+    def delete_file(self, filename):
+        if filename not in self.directory:
+            print("Error: File not found.")
+            return
+        file_info = self.directory[filename]
+        for block in file_info["blocks"]:
+            self.blocks[block] = False
+            self.block_data[block] = ""
+        del self.directory[filename]
+        print(f"File '{filename}' deleted successfully.")
+
+    def display_directory(self):
+        print("\n========== DIRECTORY ==========")
+        if not self.directory:
+            print("Directory is empty.")
+            return
+        print(f"{'File Name':<15}{'Size':<10}{'Blocks'}")
+        print("-" * 50)
+        for filename, info in self.directory.items():
+            print(f"{filename:<15}{info['size']:<10}{info['blocks']}")
+
+    def display_blocks(self):
+        print("\n========== BLOCK STATUS ==========")
+        for i in range(self.total_blocks):
+            status = "USED" if self.blocks[i] else "FREE"
+            print(f"Block {i:<3} : {status:<5} Data = '{self.block_data[i]}'")
+
+# FILE SYSTEM MENU
+
+
+def file_system_menu():
+    fs = FileSystem(20)
+    while True:
+        print("\n================================")
+        print("       SIMPLE FILE SYSTEM")
+        print("================================")
+        print("1. Create File")
+        print("2. Read File")
+        print("3. Delete File")
+        print("4. Display Directory")
+        print("5. Display Block Status")
+        print("6. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            filename = input("Enter file name: ")
+            data = input("Enter file content: ")
+            fs.create_file(filename, data)
+        elif choice == "2":
+            filename = input("Enter file name: ")
+            fs.read_file(filename)
+        elif choice == "3":
+            filename = input("Enter file name: ")
+            fs.delete_file(filename)
+        elif choice == "4":
+            fs.display_directory()
+        elif choice == "5":
+            fs.display_blocks()
+        elif choice == "6":
+            print("Exiting File System...")
+            break
+        else:
+            print("Invalid choice.")
+
+# MAIN MENU
+
+
+def main():
+    while True:
+        print("\n========================================")
+        print("       DISK & FILE SYSTEM SIMULATOR")
+        print("========================================")
+        print("1. Disk Scheduling")
+        print("2. Simple File System")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            disk_scheduling()
+        elif choice == "2":
+            file_system_menu()
+        elif choice == "3":
+            print("Program terminated.")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+# PROGRAM START
+
+if __name__ == "__main__":
+    main()
